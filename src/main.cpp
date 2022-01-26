@@ -207,45 +207,45 @@ void loop() {
     delay(600);
   }
   if(digitalRead(IRFrontCenter) && digitalRead(IRFrontLeft) && digitalRead(IRFrontRight)) {
-    left();
-    delay(1500);
-    while(true) {
-      trigAll();
-      /*
-      if(distanceM < 20) {
-        left();
-        delay(500);
+      left();
+      delay(1500);
+      while(true) {
+        trigAll();
+        /*
+        if(distanceM < 20) {
+          left();
+          delay(500);
+        }
+        else if(distanceL < 20) {
+          forwardl();
+        }
+        else if(distanceL < 20) {
+          forwardright();
+        }
+        else forward();
+      }*/
+      if(distanceM < 25) mStatus = true;
+      else mStatus = false;
+      if(distanceR < 15) rStatus = true;
+      else rStatus = false;
+      if(distanceL < 15) lStatus = true;
+      else lStatus = false;
+      
+      if(!mStatus && !lStatus) {
+      forwardleft();
       }
-      else if(distanceL < 20) {
-        forwardl();
+      else if(mStatus && !lStatus) {
+        right();
+        delay(400);
       }
-      else if(distanceL < 20) {
-        forwardright();
+      else if((!mStatus && lStatus)  || (distanceL < 10))  {
+        fasterright();
       }
-      else forward();
-    }*/
-    if(distanceM < 25) mStatus = true;
-    else mStatus = false;
-    if(distanceR < 15) rStatus = true;
-    else rStatus = false;
-    if(distanceL < 15) lStatus = true;
-    else lStatus = false;
-    
-    if(!mStatus && !lStatus) {
-    forwardleft();
+      
+      else if(mStatus && lStatus) {
+        right();
+        delay(400);
+      }
     }
-    else if(mStatus && !lStatus) {
-      right();
-      delay(400);
-    }
-    else if((!mStatus && lStatus)  || (distanceL < 10))  {
-      fasterright();
-    }
-    
-    else if(mStatus && lStatus) {
-      right();
-      delay(400);
-    }
-  }
   }
 }
