@@ -27,6 +27,11 @@ int m2Slow = 100;
 bool FOUNDMID = false;
 bool FOUNDLEFT = false;
 bool FOUNDRIGHT = false;
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//this block was initializing all the inputs and outouts of the ultrasonic sensors
+/*
 void setup() {
   pinMode(trigPin1, OUTPUT); // Sets the trigPin as an OUTPUT
   pinMode(echoPin1, INPUT); // Sets the echoPin as an INPUT
@@ -47,6 +52,13 @@ void setup() {
   pinMode(LED, OUTPUT);
   Serial.begin(115200);
 }
+*/
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//this is to initialize the ultrasonic sensors which we are phasing out
+/*
 int pulseUltra(int echo, int trig) {
   digitalWrite(trig, LOW);
   delayMicroseconds(2);
@@ -61,6 +73,8 @@ int pulseUltra(int echo, int trig) {
   
   return distance;
 }
+*/
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //movement functions to move the car
 void forward(){
