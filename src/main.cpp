@@ -1,11 +1,22 @@
 #include <Arduino.h>
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Setting up the pins for the ultrasonic sensors
+/*
 #define echoPin1 0 // attach pin D2 Arduino to pin Echo of HC-SR04
 #define trigPin1 1 //attach pin D3 Arduino to pin Trig of HC-SR04
 #define echoPin2 2
 #define trigPin2 3
 #define echoPin3 4
 #define trigPin3 5
+*/
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Below are the pins for the new IR sensors object detection
+#define frontLeftSensor 0
+#define frontMiddleSensor 1
+#define frontRightSensor 2
+/////////////////////////////////////////////////////////
 #define IRFrontCenter 6
 #define IRBackCenter 7
 #define IRFrontLeft 8
@@ -29,16 +40,25 @@ bool FOUNDLEFT = false;
 bool FOUNDRIGHT = false;
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//this block was initializing all the inputs and outouts of the ultrasonic sensors
-/*
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//SETUP LOOP
 void setup() {
+  //We do not need this block to set the different pins for the ultrasonic sensors
+  /*
   pinMode(trigPin1, OUTPUT); // Sets the trigPin as an OUTPUT
   pinMode(echoPin1, INPUT); // Sets the echoPin as an INPUT
   pinMode(trigPin2, OUTPUT); // Sets the trigPin as an OUTPUT
   pinMode(echoPin2, INPUT);
   pinMode(trigPin3, OUTPUT); // Sets the trigPin as an OUTPUT
   pinMode(echoPin3, INPUT);
+  */
+ //////////////////////////////////////////////////////////////
+ 
+  //Below is the code for the new IR Sensors to set them up
+  pinMode(frontLeftSensor, INPUT_PULLUP);
+  pinMode(frontMiddleSensor, INPUT_PULLUP);
+  pinMode(frontRightSensor, INPUT_PULLUP);
+  ///////////////////////////////////////////////////////////
   pinMode(IRFrontCenter, INPUT);
   pinMode(IRBackCenter, INPUT);
   pinMode(IRFrontLeft, INPUT);
@@ -52,9 +72,6 @@ void setup() {
   pinMode(LED, OUTPUT);
   Serial.begin(115200);
 }
-*/
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //this is to initialize the ultrasonic sensors which we are phasing out
@@ -168,11 +185,16 @@ void stop() {
   digitalWrite(rightMotorFW, 0);
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//This portion was used to trigger the ultrasonic sensors
+/*
 void trigAll() {
     distanceM = pulseUltra(echoPin1, trigPin1);
     distanceL = pulseUltra(echoPin2, trigPin2);
     distanceR = pulseUltra(echoPin3, trigPin3);
 }
+*/
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void blinkLED(){
   digitalWrite(25, 1);
@@ -192,8 +214,24 @@ int tooClose = 20;
 void loop() {
   //robot car is delaying for 5 seconds with builtin LED blinking for 5s
   //blinkLED();
-  trigAll();
+  //Do not need to trigger all ultrasonic sensors
+  //trigAll();
+  //////////////////////////////////////////////
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //Read all the front sensors
+  int frontLeft = digitalRead(frontLeftSensor);
+  int frontMiddle = digitalRead(frontMiddleSensor);
+  int frontRight = digitalRead(frontRightSensor);
+  ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //Getting the boolean Values from the IR sensors for boundary detection.
+  bool frontLeftIR = digitalRead(IRFrontLeft);
+  bool frontMiddleIR = digitalRead(IRFrontCenter);
+  bool frontRightIR = digitalRead(IRFrontRight);
+  bool backIR = digitalRead(IRBackCenter);
+
+  /*
   //Serial.println(distanceR);
   bool mStatus, rStatus, lStatus;
   if(distanceM < 25) mStatus = true;
@@ -202,7 +240,7 @@ void loop() {
   else rStatus = false;
   if(distanceL < 15) lStatus = true;
   else lStatus = false;
-
+  
   if(!mStatus && !rStatus) {
   forwardright();
   //Serial.println("Forward right");
@@ -225,7 +263,7 @@ void loop() {
     delay(1500);
     while(true) {
       trigAll();
-      /*
+      
       if(distanceM < 20) {
         left();
         delay(500);
@@ -237,7 +275,7 @@ void loop() {
         forwardright();
       }
       else forward();
-    }*/
+    }
     if(distanceM < 25) mStatus = true;
     else mStatus = false;
     if(distanceR < 15) rStatus = true;
@@ -262,6 +300,45 @@ void loop() {
     }
   }
   }
+  */
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //This is the algorithm for the Hallway traversal. "Hug the wall" Strat
+  //For the boundary detection subsystem, 0 = white and 1 = black
+  //For the object detection subsystem, 0 = object detected and 1 = clear
+  if(frontLeftIR == 0 && frontMiddleIR == 0 && frontRightIR == 0 && backIR == 0){
+    if(frontLeftSensor == 1 && frontMiddleSensor == 1 && frontRightSensor == 1){
+      forward();
+    } 
+    else if(frontLeftSensor == 1 && frontMiddleSensor == 1 && frontRightSensor == 0){
+      left();
+    }
+    else if(frontLeftSensor == 1 && frontMiddleSensor == 0 && frontRightSensor == 1){
+      forwardleft();
+    }
+    else if(frontLeftSensor == 1 && frontMiddleSensor == 0 && frontRightSensor == 0){
+      forwardleft();
+    }
+    else if(frontLeftSensor == 0 && frontMiddleSensor == 1 && frontRightSensor == 1){
+      right();
+    }
+    else if(frontLeftSensor == 0 && frontMiddleSensor == 1 && frontRightSensor == 0){
+      forward();
+    }
+    else if(frontLeftSensor == 0 && frontMiddleSensor == 0 && frontRightSensor == 1){
+      forwardright();
+    }
+    else if(frontLeftSensor == 0 && frontMiddleSensor == 0 && frontRightSensor == 0){
+      back();
+      delay(500);
+    }
+  }
+  else {
+    left();
+    delay(500);
+  }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 }
 
 //This is a comment to test my code push and pull requests
