@@ -1,59 +1,62 @@
-#include <Arduino.h>
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Setting up the pins for the ultrasonic sensors
 /*
-#define echoPin1 0 // attach pin D2 Arduino to pin Echo of HC-SR04
-#define trigPin1 1 //attach pin D3 Arduino to pin Trig of HC-SR04
-#define echoPin2 2
-#define trigPin2 3
-#define echoPin3 4
-#define trigPin3 5
-*/
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Author: Ringtarih Tamfu
+Coauthors: Sean Baker
+Project: Sumo Bot
+Organization: Texas State University
 
-//Below are the pins for the new IR sensors object detection
+Description: The purpose of this code to run all the processes of a Raspberry Pi Pico with other peripherals for the sumo bot that we
+             are designing for our Senior Design Project using multicore programming.
+             All statements are documented to show you the flow of the program,
+*/
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*LIBRARY BLOCK*/
+//All libraries we used in this program.
+#include <Arduino.h>                //This library allows us to use the Arduino format of coding the Raspberry Pi Pico
+#include "pico/multicore.h"         //This library will allow us both cores of the Raspberry Pi Pico
+/*END OF LIBRARY BLOCK*/
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*INITIALIZE BLOCK*/
+//Below are the pins used for the new IR sensors for object detection
 #define frontLeftSensor 0
 #define frontMiddleSensor 1
 #define frontRightSensor 2
-/////////////////////////////////////////////////////////
+//Below are the pins used for the IR sensors for boundary detection
 #define IRFrontCenter 6
 #define IRBackCenter 7
 #define IRFrontLeft 8
 #define IRFrontRight 9
+//Below are the pins used to control the speeds of the TT motors
 #define leftMotorFW 16
 #define leftMotorBW 17
 #define rightMotorBW 18
 #define rightMotorFW 19
+
 #define LED 25
+
 #define speedControlL 26
 #define speedControlR 27
+/*END OF INITIALIZE BLOCK*/
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-long duration; // variable for the duration of sound wave travel
-int distanceM, distanceL, distanceR; // variable for the distance measurement
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*VARIABLE BLOCK*/
+//Below are the variables used in the program.
+//These variables are pretty much RPM values that we want the whwwls to speed up to.
 int m1Speed = 250;
 int m2Speed = 255;
 int m1Slow = 100;
 int m2Slow = 100;
-bool FOUNDMID = false;
-bool FOUNDLEFT = false;
-bool FOUNDRIGHT = false;
+/*VARIABLE BLOCK*/
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//SETUP LOOP
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*SETUP BLOCK*/
+/*Description: The block below is the setup block. This block is used to set the modes of each pin that we initialize in the INITIALIZE
+               BLOCK above*/
 void setup() {
-  //We do not need this block to set the different pins for the ultrasonic sensors
-  /*
-  pinMode(trigPin1, OUTPUT); // Sets the trigPin as an OUTPUT
-  pinMode(echoPin1, INPUT); // Sets the echoPin as an INPUT
-  pinMode(trigPin2, OUTPUT); // Sets the trigPin as an OUTPUT
-  pinMode(echoPin2, INPUT);
-  pinMode(trigPin3, OUTPUT); // Sets the trigPin as an OUTPUT
-  pinMode(echoPin3, INPUT);
-  */
- //////////////////////////////////////////////////////////////
- 
   //Below is the code for the new IR Sensors to set them up
   pinMode(frontLeftSensor, INPUT_PULLUP);
   pinMode(frontMiddleSensor, INPUT_PULLUP);
