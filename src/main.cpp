@@ -188,8 +188,11 @@ void loop() {
   bool frontRightIR = digitalRead(IRFrontRight);
   bool backIR = digitalRead(IRBackCenter);
 
-  //Main algorithm for the Hallway traversal. "Hug the wall" Strat from the middle of the hallway. 
-  //For the boundary detection subsystem, 0 = white and 1 = black
+  //Main algorithm for the Hallway traversal. "Hug the wall" strategy from the middle of the hallway. 
+  /*DESCRIPTION: This strategy works by using the boundary detection sensors to make sure we are on a white surface while going down 
+                 the hallway and checking if the robot finds an object (wall) and goes away from the wall. 
+                 When the robot reaches the black border at the end of the hallway, they will turn and make a U-turn.*/
+  //For the boundary detection subsystem, 0 = white surface and 1 = black surface
   //For the object detection subsystem, 0 = object detected and 1 = clear
   if(frontLeftIR == 0 && frontMiddleIR == 0 && frontRightIR == 0 && backIR == 0){
     if(frontLeftSensor == 1 && frontMiddleSensor == 1 && frontRightSensor == 1){
