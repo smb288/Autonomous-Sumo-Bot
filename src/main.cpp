@@ -151,9 +151,9 @@ void stop() {
 /*DESCRIPTION: This block is used to set the modes of each pin that we initialize in the INITIALIZE BLOCK above*/
 void setup() {
   //Below we set the input of the E18-D80NK IR sensors
-  pinMode(frontLeftSensor, INPUT_PULLUP);
-  pinMode(frontMiddleSensor, INPUT_PULLUP);
-  pinMode(frontRightSensor, INPUT_PULLUP);
+  pinMode(frontLeftSensor, INPUT);
+  pinMode(frontMiddleSensor, INPUT);
+  pinMode(frontRightSensor, INPUT);
   //Below we set the input of the Arduino IR sensors 
   pinMode(IRFrontCenter, INPUT);
   pinMode(IRBackCenter, INPUT);
