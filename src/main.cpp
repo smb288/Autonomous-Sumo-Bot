@@ -194,7 +194,7 @@ void loop() {
                  When the robot reaches the black border at the end of the hallway, they will turn and make a U-turn.*/
   //For the boundary detection subsystem, 0 = white surface and 1 = black surface
   //For the object detection subsystem, 0 = object detected and 1 = clear
-  if(frontLeftIR == 0 && frontMiddleIR == 0 && frontRightIR == 0 && backIR == 0){
+  //if(frontLeftIR == 0 && frontMiddleIR == 0 && frontRightIR == 0 && backIR == 0){
     if(frontLeftSensor == 1 && frontMiddleSensor == 1 && frontRightSensor == 1){
       forward();
     } 
@@ -220,11 +220,11 @@ void loop() {
       back();
       delay(500);
     }
-  }
-  else {
-    left();
-    delay(500);
-  }
+  //}
+  //else {
+    //left();
+    //delay(500);
+  //}
   /*END OF LOOP BLOCK*/
   //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
