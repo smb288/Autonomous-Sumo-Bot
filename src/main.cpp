@@ -5,32 +5,59 @@
 #include <Arduino.h>                
 #include "pico/multicore.h"         
 
-#define objLeft 0
-#define objMid 2
-#define objRight 1
+// Front facing IR sensors
+// for object detection
+#define objLeft 2
+#define objMid 1
+#define objRight 0
 
-#define boundLeft 26
+// Bottom mounted IR sensors
+// for boundary detection
+#define boundLeft 27
 #define boundRight 28
 
+
+// Pins for motor driver
 #define lMotorFW 16
 #define lMotorBW 17
 #define rMotorFW 18
 #define rMotorBW 19
-
 #define speedControlL 20
 #define speedControlR 21
 
-// Determines max speed of motors
-int m1Speed = 200*0.8;
-int m2Speed = 200*0.8;
 
 // Keeps track of the last seen object
 // Default to 3 so the sumo-bot defaults to forward
 int lastState = 3;
 
+// Bool value that changes to true after 5 seconds
+bool start = false;
+
+// Boundary detection sensors sample to these arrays
+int lBoundSamples[100];
+int rBoundSamples[100];
+byte arrayIndex = 0;
+
+
+// Average and sum of each boundary array
+int lAvg, rAvg;
+int lSum, rSum;
+int lThresh = 0;
+int rThresh = 0;
+
+
+// Keeps track of time in start sequence
+unsigned long startMillis;
+unsigned long currentMillis;
+const unsigned long startPeriod = 5000;
+
+
+int lBoundVal;
+int rBoundVal;
+
 // Movement functions. Will make these so you can pass
 // in different speeds at a later time. 
-void fwDrive() {
+void fwDrive(int m1Speed, int m2Speed) {
   analogWrite(speedControlL, m1Speed);
   analogWrite(speedControlR, m2Speed);
   digitalWrite(lMotorFW,1);
@@ -39,7 +66,7 @@ void fwDrive() {
   digitalWrite(rMotorBW,0);
 }
 
-void bwDrive() {
+void bwDrive(int m1Speed, int m2Speed) {
   analogWrite(speedControlL, m1Speed);
   analogWrite(speedControlR, m2Speed);
   digitalWrite(lMotorFW,0);
@@ -48,7 +75,7 @@ void bwDrive() {
   digitalWrite(rMotorBW,1);
 }
 
-void lTurn() {
+void lTurn(int m2Speed) {
   analogWrite(speedControlL, 0);
   analogWrite(speedControlR, m2Speed);
   digitalWrite(lMotorFW,0);
@@ -57,13 +84,42 @@ void lTurn() {
   digitalWrite(rMotorBW,0);
 }
 
-void rTurn() {
+void rTurn(int m1Speed) {
   analogWrite(speedControlL, m1Speed);
   analogWrite(speedControlR, 0);
   digitalWrite(lMotorFW,1);
   digitalWrite(rMotorFW,0);
   digitalWrite(lMotorBW,0);
   digitalWrite(rMotorBW,0);
+}
+
+void mStop() {
+  analogWrite(speedControlL, 0);
+  analogWrite(speedControlR, 0);
+  digitalWrite(lMotorFW,0);
+  digitalWrite(rMotorFW,0);
+  digitalWrite(lMotorBW,0);
+  digitalWrite(rMotorBW,0);
+}
+
+
+// Reads from boundary sensors
+int readQD(int boundPin){
+  //Returns value from the QRE1113 
+  //Lower numbers mean more refleacive
+  //More than 3000 means nothing was reflected.
+  pinMode( boundPin, OUTPUT );
+  digitalWrite( boundPin, HIGH );  
+  delayMicroseconds(10);
+  pinMode( boundPin, INPUT );
+
+  long time = micros();
+
+  //time how long the input is HIGH, but quit after 3ms as nothing happens after that
+  while (digitalRead(boundPin) == HIGH && micros() - time < 3000); 
+  int diff = micros() - time;
+
+  return diff;
 }
 
 
@@ -96,63 +152,72 @@ int getDir() {
   return dir;
 }
 
+
 void boundCheck() {
   // Read in values from boundary sensors
-  int lBoundVal = analogRead(boundLeft);
-  int rBoundVal = analogRead(boundRight);
+  lBoundVal = readQD(boundLeft);
+  rBoundVal = readQD(boundRight);
 
   // Threshold for boundary detection sensors
-  int boundThresh = 190;
+  int lBoundThresh = 3000;
+  int rBoundThresh = 3000;
+  int low = 95;
+  int high = 125;
 
   // Check if values are less than 200
   // if not, search for enemy
-  if(lBoundVal < boundThresh) {
-    bwDrive();
+  if(rBoundVal < rBoundThresh) {
+    bwDrive(170,170);
     delay(500);
-    rTurn();
+    lTurn(170);
     delay(500);
+    lastState = 3;
   }
-  else if(rBoundVal < boundThresh) {
-    bwDrive();
+  else if(lBoundVal < lBoundThresh) {
+
+    bwDrive(170,170);
     delay(500);
-    lTurn();
+    rTurn(170);
     delay(500);
+    lastState = 3;
   }
   // Determines the direction the car
   // should move based on what sensors are high
+  //Original low 130 and high 150
+  
   else {
     int dir = getDir();
     switch(dir) {
       case 1:
         while(digitalRead(objMid)) {
-          lBoundVal = analogRead(boundLeft);
-          rBoundVal = analogRead(boundRight);
+          lBoundVal = readQD(boundLeft);
+          rBoundVal = readQD(boundRight);
           lastState = 1;
-          if(lBoundVal < boundThresh || rBoundVal < boundThresh)
+          if(lBoundVal < lBoundThresh || rBoundVal < rBoundThresh)
             break;
-          lTurn();
+          lTurn(high);
         }
       break;
       case 2:
-        lTurn();
+        fwDrive(low,high);
         lastState = 2;
       break;
       case 3:
-        fwDrive();
+        fwDrive(high,high);
         lastState = 3;
       break;
       case 4:
-        rTurn();
+        fwDrive(high,low);
         lastState = 4;
       break;
       case 5:
         while(digitalRead(objMid)) {
-          lBoundVal = analogRead(boundLeft);
-          rBoundVal = analogRead(boundRight);
+          lBoundVal = readQD(boundLeft);
+          rBoundVal = readQD(boundRight);
           lastState = 5;
-          if(lBoundVal < boundThresh || rBoundVal < boundThresh)
+          if(lBoundVal < lBoundThresh || rBoundVal < rBoundThresh)
             break;
-          rTurn();
+          rTurn(high);
         }
       break;
       // If sensors aren't seeing anything,
@@ -160,18 +225,17 @@ void boundCheck() {
       // last seen.
       default:
         if(lastState == 1)
-          lTurn();
+          lTurn(high);
         else if(lastState == 5)
-          rTurn();
+          rTurn(high);
         else if(lastState == 3)
-          fwDrive();
+          fwDrive(high,high);
         else
-          fwDrive();
+          fwDrive(high,high);
       break;
     }
   }
 }
-
 
 // Initializes all of the pins
 void setup() {
@@ -188,13 +252,59 @@ void setup() {
   pinMode(rMotorFW, OUTPUT);
   pinMode(speedControlL, OUTPUT);
   pinMode(speedControlR, OUTPUT);
+
+  // Start at a high value so
+  // car doesn't start backing up
+  // at start
+  lBoundVal = 3010;
+  rBoundVal = 3010;
   
   Serial.begin(115200);
+
+  // Get time from power on
+  startMillis = millis();
 }
 
+
+// Stops the car from moving for 5 seconds
+// During this time, read from the boundary
+// sensors to get a value for the field
+void startSeq() {
+  if(!start) {
+    mStop();
+    if(arrayIndex < 100) {
+      int lSample = analogRead(boundLeft);
+      int rSample = analogRead(boundRight);
+      lBoundSamples[arrayIndex] = lSample;
+      rBoundSamples[arrayIndex] = rSample;
+      arrayIndex++;
+    }
+    
+    if(arrayIndex == 99) {
+      for(int i = 0; i < 100; i++) {
+        lSum += lBoundSamples[i];
+        rSum += rBoundSamples[i];
+      }
+      lAvg = lSum / 100;
+      rAvg = rSum / 100;
+    } 
+
+    currentMillis = millis();
+    if (currentMillis - startMillis >= startPeriod)
+    {
+      startMillis = currentMillis;
+      Serial.print("L Avg: ");
+      Serial.print(lAvg);
+      Serial.print("R Avg: ");
+      Serial.print(rAvg);
+      start = true;
+    }
+  }
+}
 
 // Loops the boundary check function. Will expand on
 // this in the future.
 void loop() {
+  //startSeq();
   boundCheck();
 }
